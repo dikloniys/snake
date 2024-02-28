@@ -27,6 +27,65 @@ const initialState = {
 const App = () => {
     const [state, setState] = useState(initialState);
 
+    const gameOver = useCallback(
+        () => {
+          alert(`GAME OVER, your score is ${state.snakeDots.length - 2}`); 
+      setState(initialState); 
+        },
+        [state.snakeDots.length],
+      )
+
+    const onSnakeCollapsed = useCallback(
+        () => {
+            let snake = [...state.snakeDots]; 
+            let head = snake[snake.length - 1]; 
+            snake.forEach((dot) => { 
+                if (head[0] === dot[0] && head[1] === dot[1]) { 
+                    gameOver(); 
+                } 
+            }); 
+            },
+        [gameOver, state.snakeDots],
+        )
+        const increaseSnake = useCallback(
+            () => {
+              const { snakeDots, food } = state;
+              const newSnakeDots = [...snakeDots];
+              newSnakeDots.unshift([...food]); 
+              setState(prev =>{ 
+                  prev.snakeDots = newSnakeDots
+                  return prev
+              }); 
+            },
+            [state],
+          )
+
+        const onSnakeEats = useCallback(
+            () => {
+            setState(prev =>{ 
+                prev.food = getRandomFood()
+                return prev
+            }); 
+            increaseSnake();  
+            },
+            [increaseSnake],
+          )
+              
+    const onSnakeOut = useCallback(
+        () => {
+          let head = state.snakeDots[state.snakeDots.length - 1]; 
+      if ( 
+          head[0] >= 100 || 
+          head[1] >= 100 || 
+          head[0] < 0 || 
+          head[1] < 0 
+      ) { 
+          gameOver()
+      } 
+        },
+        [gameOver, state.snakeDots],
+      )
+      
 	const moveSnake = useCallback(
 	  () => {
 		let dots = [...state.snakeDots];
@@ -57,11 +116,11 @@ const App = () => {
             }));
             onSnakeOut()
         }
-        if (head[0] === food[0] && head[1] === food[1]) { 
+        if (head[0] === state.food[0] && head[1] === state.food[1]) { 
             onSnakeEats()
         }
 	  },
-	  [state]
+	  [onSnakeCollapsed, onSnakeEats, onSnakeOut, state]
 	)
 
     useEffect(() => {
@@ -115,53 +174,7 @@ const App = () => {
             route: "game",
         });
     };
-    function increaseSnake() {
-        const { snakeDots, food } = state;
-        const newSnakeDots = [...snakeDots];
-        newSnakeDots.unshift([...food]); 
-        setState(prev =>{ 
-            prev.snakeDots = newSnakeDots
-            return prev
-        }); 
-      }
-    function onSnakeEats() { 
-
-        setState(prev =>{ 
-            prev.food = getRandomFood()
-            return prev
-        }); 
-        increaseSnake();  
-    } 
-
-    function onSnakeOut() { 
-	let head = state.snakeDots[state.snakeDots.length - 1]; 
-    if ( 
-        head[0] >= 100 || 
-        head[1] >= 100 || 
-        head[0] < 0 || 
-        head[1] < 0 
-    ) { 
-        gameOver()
-    } 
-} 
-function gameOver(){ 
-	alert(`GAME OVER, your score is ${state.snakeDots.length - 2}`); 
-	setState(initialState); 
-} 
-
-function onSnakeCollapsed() { 
-	let snake = [...state.snakeDots]; 
-	let head = snake[snake.length - 1]; 
-	snake.pop(); 
-	snake.forEach((dot) => { 
-		if (head[0] === dot[0] && head[1] === dot[1]) { 
-			gameOver(); 
-		} 
-	}); 
-} 
-
-
-
+   
     const { route, snakeDots, food } = state;
 
     return (
